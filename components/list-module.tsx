@@ -14,7 +14,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
-import { fetchPeople, deletePerson, exportToExcel } from "@/lib/data-actions"
+import { fetchPeople, deletePerson } from "@/lib/data-actions"
 import { formatCurrency, calculateAge } from "@/lib/utils"
 
 export default function ListModule({ refreshTrigger, onRefresh, onEdit, onView, onAddNew }) {
@@ -60,7 +60,32 @@ export default function ListModule({ refreshTrigger, onRefresh, onEdit, onView, 
 
   const handleExport = async () => {
     try {
-      await exportToExcel()
+      // Create CSV content
+      let csvContent =
+        "No,NIK,Nama,Provinsi,Kabupaten,Kecamatan,Alamat,Telp/HP,Email,Tgl Lahir,Usia,Pendapatan,Pendidikan,Pekerjaan,Keterangan\n"
+
+      people.forEach((person, index) => {
+        const birthDate = new Date(person.birthDate)
+        const formattedBirthDate = birthDate.toLocaleDateString("id-ID", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        })
+
+        const age = calculateAge(person.birthDate)
+
+        csvContent += `${index + 1},${person.nik},"${person.name}","${person.provinceCode} - ${person.provinceName}","${person.regencyCode} - ${person.regencyName}","${person.districtCode} - ${person.districtName}","${person.address}",${person.phone},${person.email},"${formattedBirthDate}",${age},${person.income},"${person.education}","${person.occupation}","${person.notes || ""}"\n`
+      })
+
+      // Create a blob and download link
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.setAttribute("download", "data-penduduk.csv")
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
     } catch (error) {
       console.error("Error exporting to Excel:", error)
     }

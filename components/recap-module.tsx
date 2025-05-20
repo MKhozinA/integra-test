@@ -6,24 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { FileSpreadsheet } from "lucide-react"
-import { fetchProvinces, fetchRegencies, fetchDistricts, fetchRecapData, exportRecapToExcel } from "@/lib/data-actions"
-
-const ageRanges = [
-  { id: "0-6", label: "0-6 tahun" },
-  { id: "7-16", label: "7-16 tahun" },
-  { id: "17-35", label: "17-35 tahun" },
-  { id: "36-99", label: "36+ tahun" },
-]
-
-const incomeRanges = [
-  { id: "0-1000000", label: "< Rp 1.000.000" },
-  { id: "1000000-3000000", label: "Rp 1.000.000 - Rp 3.000.000" },
-  { id: "3000000-5000000", label: "Rp 3.000.000 - Rp 5.000.000" },
-  { id: "5000000-10000000", label: "Rp 5.000.000 - Rp 10.000.000" },
-  { id: "10000000-999999999", label: "> Rp 10.000.000" },
-]
-
-const educationLevels = ["SD", "SMP", "SMA/SMK", "D1", "D2", "D3", "S1", "S2", "S3"]
 
 export default function RecapModule() {
   const [recapType, setRecapType] = useState("age")
@@ -38,6 +20,7 @@ export default function RecapModule() {
 
   useEffect(() => {
     loadProvinces()
+    loadMockData()
   }, [])
 
   useEffect(() => {
@@ -59,13 +42,17 @@ export default function RecapModule() {
   }, [selectedRegency])
 
   useEffect(() => {
-    loadRecapData()
+    loadMockData()
   }, [recapType, selectedProvince, selectedRegency, selectedDistrict])
 
   const loadProvinces = async () => {
     try {
-      const data = await fetchProvinces()
-      setProvinces(data)
+      // For demo purposes, we'll use mock data
+      setProvinces([
+        { code: "31", name: "DKI JAKARTA" },
+        { code: "32", name: "JAWA BARAT" },
+        { code: "33", name: "JAWA TENGAH" },
+      ])
     } catch (error) {
       console.error("Error loading provinces:", error)
     }
@@ -73,8 +60,23 @@ export default function RecapModule() {
 
   const loadRegencies = async (provinceCode) => {
     try {
-      const data = await fetchRegencies(provinceCode)
-      setRegencies(data)
+      // For demo purposes, we'll use mock data
+      if (provinceCode === "31") {
+        setRegencies([
+          { code: "3171", name: "KOTA JAKARTA PUSAT" },
+          { code: "3172", name: "KOTA JAKARTA UTARA" },
+        ])
+      } else if (provinceCode === "32") {
+        setRegencies([
+          { code: "3201", name: "KABUPATEN BOGOR" },
+          { code: "3273", name: "KOTA BANDUNG" },
+        ])
+      } else {
+        setRegencies([
+          { code: "3301", name: "KABUPATEN CILACAP" },
+          { code: "3302", name: "KABUPATEN BANYUMAS" },
+        ])
+      }
     } catch (error) {
       console.error("Error loading regencies:", error)
     }
@@ -82,43 +84,120 @@ export default function RecapModule() {
 
   const loadDistricts = async (regencyCode) => {
     try {
-      const data = await fetchDistricts(regencyCode)
-      setDistricts(data)
+      // For demo purposes, we'll use mock data
+      if (regencyCode === "3171") {
+        setDistricts([
+          { code: "317101", name: "TANAH ABANG" },
+          { code: "317102", name: "MENTENG" },
+        ])
+      } else if (regencyCode === "3172") {
+        setDistricts([
+          { code: "317201", name: "PENJARINGAN" },
+          { code: "317202", name: "PADEMANGAN" },
+        ])
+      } else {
+        setDistricts([
+          { code: "320101", name: "BOGOR SELATAN" },
+          { code: "320102", name: "BOGOR TIMUR" },
+        ])
+      }
     } catch (error) {
       console.error("Error loading districts:", error)
     }
   }
 
-  const loadRecapData = async () => {
+  const loadMockData = () => {
     setLoading(true)
-    try {
-      const filters = {
-        provinceCode: selectedProvince,
-        regencyCode: selectedRegency,
-        districtCode: selectedDistrict,
-      }
 
-      const data = await fetchRecapData(recapType, filters)
-      setRecapData(data)
-    } catch (error) {
-      console.error("Error loading recap data:", error)
-    } finally {
-      setLoading(false)
+    // Generate mock data based on recap type
+    let mockData = []
+
+    if (recapType === "age") {
+      mockData = [
+        { range: "0-6", label: "0-6 tahun", count: 3, percentage: 15 },
+        { range: "7-16", label: "7-16 tahun", count: 5, percentage: 25 },
+        { range: "17-35", label: "17-35 tahun", count: 8, percentage: 40 },
+        { range: "36-99", label: "36+ tahun", count: 4, percentage: 20 },
+      ]
+    } else if (recapType === "income") {
+      mockData = [
+        { range: "0-1000000", label: "< Rp 1.000.000", count: 2, percentage: 10 },
+        { range: "1000000-3000000", label: "Rp 1.000.000 - Rp 3.000.000", count: 6, percentage: 30 },
+        { range: "3000000-5000000", label: "Rp 3.000.000 - Rp 5.000.000", count: 7, percentage: 35 },
+        { range: "5000000-10000000", label: "Rp 5.000.000 - Rp 10.000.000", count: 3, percentage: 15 },
+        { range: "10000000-999999999", label: "> Rp 10.000.000", count: 2, percentage: 10 },
+      ]
+    } else if (recapType === "education") {
+      mockData = [
+        { education: "SD", count: 3, percentage: 15 },
+        { education: "SMP", count: 2, percentage: 10 },
+        { education: "SMA/SMK", count: 5, percentage: 25 },
+        { education: "D3", count: 2, percentage: 10 },
+        { education: "S1", count: 6, percentage: 30 },
+        { education: "S2", count: 2, percentage: 10 },
+      ]
+    } else if (recapType === "region") {
+      if (selectedProvince === "all") {
+        mockData = [
+          { code: "31", name: "DKI JAKARTA", count: 10, percentage: 50 },
+          { code: "32", name: "JAWA BARAT", count: 6, percentage: 30 },
+          { code: "33", name: "JAWA TENGAH", count: 4, percentage: 20 },
+        ]
+      } else if (selectedRegency === "all") {
+        mockData = [
+          { code: "3171", name: "KOTA JAKARTA PUSAT", count: 6, percentage: 60 },
+          { code: "3172", name: "KOTA JAKARTA UTARA", count: 4, percentage: 40 },
+        ]
+      } else if (selectedDistrict === "all") {
+        mockData = [
+          { code: "317101", name: "TANAH ABANG", count: 3, percentage: 50 },
+          { code: "317102", name: "MENTENG", count: 3, percentage: 50 },
+        ]
+      } else {
+        mockData = [{ code: selectedDistrict, name: "TANAH ABANG", count: 3, percentage: 100 }]
+      }
     }
+
+    setRecapData(mockData)
+    setLoading(false)
   }
 
-  const handleExport = async () => {
-    try {
-      const filters = {
-        provinceCode: selectedProvince,
-        regencyCode: selectedRegency,
-        districtCode: selectedDistrict,
-      }
+  const handleExport = () => {
+    // Create a simple CSV string
+    let csvContent = ""
 
-      await exportRecapToExcel(recapType, filters)
-    } catch (error) {
-      console.error("Error exporting to Excel:", error)
+    // Add headers based on recap type
+    if (recapType === "age") {
+      csvContent = "Range Usia,Jumlah,Persentase\n"
+      recapData.forEach((item) => {
+        csvContent += `${item.label},${item.count},${item.percentage}%\n`
+      })
+    } else if (recapType === "income") {
+      csvContent = "Range Pendapatan,Jumlah,Persentase\n"
+      recapData.forEach((item) => {
+        csvContent += `${item.label},${item.count},${item.percentage}%\n`
+      })
+    } else if (recapType === "education") {
+      csvContent = "Tingkat Pendidikan,Jumlah,Persentase\n"
+      recapData.forEach((item) => {
+        csvContent += `${item.education},${item.count},${item.percentage}%\n`
+      })
+    } else if (recapType === "region") {
+      csvContent = "Wilayah,Jumlah,Persentase\n"
+      recapData.forEach((item) => {
+        csvContent += `${item.code} - ${item.name},${item.count},${item.percentage}%\n`
+      })
     }
+
+    // Create a Blob and download link
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.setAttribute("download", `rekap-${recapType}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
   }
 
   const renderRecapTable = () => {
